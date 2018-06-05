@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>compileBitcode</key>
+	<false/>
+	<key>method</key>
+	<string>ad-hoc</string>
+	<key>provisioningProfiles</key>
+	<dict>
+		<key>com.dajiaochong.kidstone.twins</key>
+		<string>ad_hoc_17_12_07</string>
+	</dict>
+	<key>signingCertificate</key>
+	<string>04B7143390A98B126D778F3F25D311B7D03AD099</string>
+	<key>signingStyle</key>
+	<string>manual</string>
+	<key>stripSwiftSymbols</key>
+	<true/>
+	<key>teamID</key>
+	<string>RR6XC72KYD</string>
+	<key>thinning</key>
+	<string>&lt;none&gt;</string>
+</dict>
+</plist>
