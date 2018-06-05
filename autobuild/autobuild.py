@@ -188,7 +188,7 @@ class AutoBuild():
 		else:
 			print('**************编译ipa成功*************')
 			if NEED_UPLOAD_FIR:
-				build.upload_fir()
+				self.upload_fir()
 
 
 	def clear_build(self):
