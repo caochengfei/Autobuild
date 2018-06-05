@@ -109,3 +109,5 @@ cd Desktop/autobuild/
 ```
 python3 autobuild.py
 ```
+
+之后就是漫长的等待......
