@@ -17,7 +17,7 @@ class FastBuild():
 	def __init__(self):
 		pass
 
-	def bulidIPA(self):
+	def bulid_ipa(self):
 		os.mkdir(PAYLOAD_PATH)
 		#将app 拷贝到PayLoadPath路径下
 		subprocess.getoutput('cp -r %s %s'%(APP_FILE_FULL_PATH,PAYLOAD_PATH))
@@ -28,7 +28,7 @@ class FastBuild():
 		#删除PayLoadPath文件夹
 		subprocess.getoutput('rm -rf %s'%(PAYLOAD_PATH))
 		#切换到packBagPath
-		os.chdir(packBagPath)
+		os.chdir(PACK_BAG_PATH)
 		#压缩 zip
 		subprocess.getoutput('zip -r Payload.zip Payload')
 		#重命名为ipa
