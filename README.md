@@ -41,10 +41,12 @@ PROJECT_PATH = "/Users/xxxx/Desktop/xxxx/"
 ARCHIVE_BASE_PATH = "/Users/xxxx/Desktop/App/Archive/"
 #ipa根路径 需要改为自己的路径
 IPA_BASE_PATH = "/Users/xxxx/Desktop/App/Ipa/"
-#是否需要上传到fir 不需要则修改为False
-NEED_UPLOAD_FIR = True
-#上传到fir需要的token 可登陆fir获取
-FIR_CLI_TOKEN = "xxxxxxxxxxxxxxxx"
+#上传到fir需要的token fir官网获取
+FIR_CLI_TOKEN = "xxxx"
+#蒲公英ukey 蒲公英官网获取
+PGYER_UKEY = "xxxx"
+#蒲公英apikey 蒲公英官网获取
+PGYER_API_KEY = "xxxx"
 ```
 
 ```python
@@ -90,12 +92,38 @@ ENTERPRISE_EXPORT_OPTIONS = "~/Desktop/autobuild/Enterprise_ExportOptions.plist"
 ```
 
 ### ExportOptions.plist文件 获取
-配置好xcode环境 选择好证书&配置文件 Archive 以后 export 对应的ipa到桌面(adhoc,appstore,enterprise) 分别将对应的ExportOptions.plist 文件拷贝到autobuild目录中,根据类型,重命名为 以上的文件名称
+配置好xcode环境 选择好证书&配置文件 点击xcode的Product -> Archive 以后 export 对应的ipa到桌面(adhoc,appstore,enterprise) 分别将对应的ExportOptions.plist 文件拷贝到autobuild目录中,根据类型,重命名为 以上的文件名称
 
 ``` python
 ADHOC_EXPORT_OPTIONS = "~/Desktop/autobuild/Adhoc_ExportOptions.plist"
 APPSTORE_EXPORT_OPTIONS = "~/Desktop/autobuild/Appstore_ExportOptions.plist"
 ENTERPRISE_EXPORT_OPTIONS = "~/Desktop/autobuild/Enterprise_ExportOptions.plist"
+```
+### 设置上传完毕自动发邮件(目前只支持蒲公英，fir没实名认证所以没上传)
+
+```
+def send_email(self,url=None):
+
+		print('****************发送邮件通知**********************')
+		main_host = 'smtp.qq.com'
+		# 发件邮箱
+		sender = 'xxxx@qq.com'
+		# 授权码 || 密码
+		sender_pwd = 'xxxx'
+		# 收件人列表
+		receivers = '''xxxx@qq.com,
+					 xxxx@qq.com,
+					 xxxx@qq.com,
+					 xxxx@qq.com,
+					 xxxx@qq.com'''
+
+		#设置邮件标题,此处自己随意填写
+		title = '虫娘又有新版本了'
+		
+		#以上xxxx根据实际情况填写
+		...
+		...
+		...
 ```
 
 
@@ -109,5 +137,3 @@ cd Desktop/autobuild/
 ```
 python3 autobuild.py
 ```
-
-之后就是漫长的等待......

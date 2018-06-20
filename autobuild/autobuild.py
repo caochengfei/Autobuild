@@ -2,6 +2,11 @@
 import os
 import subprocess
 import time
+import json
+import smtplib
+from email.mime.text import MIMEText
+from email.header import Header
+from email.mime.multipart import MIMEMultipart
 
 #工程名字（Target名字）
 PROJECT_NAME = "xxxx"
@@ -11,11 +16,12 @@ PROJECT_PATH = "/Users/xxxx/Desktop/xxxx/"
 ARCHIVE_BASE_PATH = "/Users/xxxx/Desktop/App/Archive/"
 #ipa根路径 需要改为自己的路径
 IPA_BASE_PATH = "/Users/xxxx/Desktop/App/Ipa/"
-#上传到fir需要的token
-FIR_CLI_TOKEN = "xxxxxxxxx"
-#是否需要上传到fir
-NEED_UPLOAD_FIR = True
-
+#上传到fir需要的token fir官网获取
+FIR_CLI_TOKEN = "xxxx"
+#蒲公英ukey 蒲公英官网获取
+PGYER_UKEY = "xxxx"
+#蒲公英apikey 蒲公英官网获取
+PGYER_API_KEY = "xxxx"
 
 #AdHoc版本的 Bundle ID
 ADHOC_BUNDLE_ID = "xxxx"
@@ -85,7 +91,6 @@ class AutoBuild():
 			self.target_name = APPSTORE_TARGET_NAME
 			self.export_options = APPSTORE_EXPORT_OPTIONS
 
-
 		print("********* 请选择configuration类型，默认Release *********")
 		if input('**** Please select the configuration type (1.Release 2.Debug) \n') == '2':
 			self.configuration = "Debug"
@@ -100,14 +105,16 @@ class AutoBuild():
 		#设置导出的ipa文件路径
 		self.ipa_path = IPA_BASE_PATH + self.bundle_id + "/" + self.time + "/" + self.scheme_name
 
+		self.upload_channel = input('**** Please select the upload_channel type (1.Pgyer 2.Fir ) \n')
 
-		print("************** 请选择工程类型，默认为不使用Cocoapods ***************")
+
+	def build(self):
 		if input("Please select the Project type: (1.Use Cocoapods 2.Don't use Cocoapods) \n") == '1':
 			self.clear_build()
-			self.build_workspace()
+			return self.build_workspace()
 		else:
 			self.clear_build()
-			self.build_xcodeproj()
+			return self.build_xcodeproj()
 
 
 	def build_xcodeproj(self):
@@ -134,10 +141,10 @@ class AutoBuild():
 
 		if process.returncode != 0:
 			print('********* archive失败 ***********')
+			return False
 		else:
 			print('********* archive成功 ***********')
-			self.bulid_ipa()
-
+			return True
 
 	def build_workspace(self):
 
@@ -165,9 +172,10 @@ class AutoBuild():
 
 		if process.returncode != 0:
 			print('*************archive失败************')
+			return False
 		else:
 			print('*************archive成功************')
-			self.bulid_ipa()
+			return True
 
 
 	def bulid_ipa(self):
@@ -185,19 +193,16 @@ class AutoBuild():
 
 		if process.returncode != 0:
 			print('**************编译ipa失败*************')
+			return False
 		else:
 			print('**************编译ipa成功*************')
-			if NEED_UPLOAD_FIR:
-				self.upload_fir()
-
+			return True
 
 	def clear_build(self):
+		print('**********************clean***********************')
 		os.chdir(PROJECT_PATH)
 		subprocess.getoutput('xcodebuild clean')
-		#pod install
-		print('******************* pod install **********************')
-		subprocess.getoutput('pod install --no-repo-update || exit')
-
+		
 	def install_fir_cli(self):
 		print('********************判断是否安装fir-cli**********************')
 		fir_process = subprocess.getoutput('fir --version')
@@ -226,10 +231,121 @@ class AutoBuild():
 				fir_process = subprocess.Popen('fir publish %s/%s'%(self.ipa_path,self.scheme_name + '.ipa'),shell = True)
 				fir_process.wait()
 				if fir_process.returncode == 0:
-					print('上传成功')
+					print('上传Fir成功')
+				else:
+					print('上传Fir失败')
 			else:
 				print('登录fir失败')
-		
+
+	def upload_pgyer(self):
+		print('********************开始上传到蒲公英**********************')
+
+		# test_path = '/Users/caochengfei/Desktop/djcInhouse.ipa'
+		# test_curl = "curl \
+		# -F 'file=@%s' \
+		# -F 'uKey=%s' \
+		# -F '_api_key=%s'\
+		# https://www.pgyer.com/apiv1/app/upload"%(test_path,PGYER_UKEY,PGYER_API_KEY)
+
+		curl_str = "curl \
+		-F 'file=@%s/%s' \
+		-F 'uKey=%s' \
+		-F '_api_key=%s'\
+		https://www.pgyer.com/apiv1/app/upload"%(self.ipa_path,self.scheme_name+'.ipa',PGYER_UKEY,PGYER_API_KEY)
+
+		process = subprocess.Popen(curl_str,shell=True,stdout=subprocess.PIPE)
+		for line in process.stdout:
+			result = json.loads(line)
+		process.wait()
+		if process.returncode == 0:
+			print('上传成功')
+			app_qrcode_url = result['data']['appQRCodeURL']
+			self.send_email(app_qrcode_url)
+		else:
+			print('上传失败')
+
+	def send_email(self,url=None):
+
+		print('****************发送邮件通知**********************')
+		main_host = 'smtp.qq.com'
+		# 发件邮箱
+		sender = 'xxxx@qq.com'
+		# 授权码 || 密码
+		sender_pwd = 'xxxx'
+		# 收件人列表
+		receivers = '''xxxx@qq.com,
+					 xxxx@qq.com,
+					 xxxx@qq.com,
+					 xxxx@qq.com,
+					 xxxx@qq.com'''
+
+		#设置邮件标题,此处自己随意填写
+		title = '虫娘又有新版本了'
+
+		to_addrs = receivers.split(',')
+
+		message = MIMEMultipart()
+		message['from'] = Header(sender)
+		message['to'] = Header(','.join(to_addrs))
+		message['Subject'] = Header(title 'utf-8')
+
+		html = """ 
+		<html> 
+		  <head></head> 
+		  <body> 
+		    <p>您的内测包已到，请点击查收<br> 
+		       请点击这里 <a href="%s">点击获取二维码</a>. 
+		    </p> 
+		  </body> 
+		</html> 
+		"""%(url)
+
+		message.attach(MIMEText(html,'html','utf-8'))
+
+		try:
+			smtp = smtplib.SMTP()
+			smtp.connect(host=main_host,port=587)
+			smtp.ehlo()
+			smtp.starttls()
+			smtp.login(sender,sender_pwd)
+			smtp.sendmail(sender,to_addrs,message.as_string())
+		except smtplib.SMTPHeloError:
+			print(smtplib.SMTPException)
+			print('Error: 无法发送邮件SMTPException')
+		except smtplib.SMTPConnectError:
+			print('Error: 无法发送邮件SMTPConnectError')
+		except smtplib.SMTPAuthenticationError:
+			print('Error: 无法发送邮件SMTPAuthenticationError')
+		except smtplib.SMTPHeloError:
+			print('Error: 无法发送邮件SMTPHeloError')
+		except smtplib.SMTPDataError:
+			print('Error: 无法发送邮件SMTPDataError')
 
 build = AutoBuild()
+if build.build() == False:
+	exit()
+
+if build.bulid_ipa() == False:
+	exit()
+
+if build.upload_channel == '2':
+	build.upload_fir()
+else:
+	build.upload_pgyer()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
